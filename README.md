@@ -4,10 +4,6 @@
   <b>Time Series Forecasting</b> · <b>Prophet</b> · <b>Apache Airflow</b> · <b>Amazon EC2</b> · <b>Python</b> · <b>Binance API</b>
 </p>
 
-<p align="center">
-  <i>DADS6005 Final Project · NIDA · Oct – Dec 2024</i>
-</p>
-
 ---
 
 ## Overview
