@@ -1,6 +1,6 @@
 # Real-Time Bitcoin Price Forecasting with Prophet
 
-<p align="center">
+<p>
   <b>Time Series Forecasting</b> · <b>Prophet</b> · <b>Apache Airflow</b> · <b>Amazon EC2</b> · <b>Python</b> · <b>Binance API</b>
 </p>
 
