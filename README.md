@@ -1,101 +1,249 @@
-# DADS6005 Final Project (DADS5) - Predicting the Live Price of Bitcoin (BTC)
----
-## About the Final Project
+# Real-Time Bitcoin Price Forecasting with Prophet
 
-โครงการนี้เกี่ยวข้องกับการพยากรณ์ราคา Bitcoin โดยกำหนดช่วงเวลา 22:00 - 06:00 น. ของแต่ละวันระหว่างวันที่ 21 - 24 ธันวาคม 2567 โดยตั้งเวลาให้การทำงานของระบบเกิดขึ้นทุก ๆ 5 นาที และทำการคำนวณค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์ (Mean Absolute Percentage Error - MAPE) ทุกชั่วโมง (โดยกำหนด len=12)
+<p align="center">
+  <b>Time Series Forecasting</b> · <b>Prophet</b> · <b>Apache Airflow</b> · <b>Amazon EC2</b> · <b>Python</b> · <b>Binance API</b>
+</p>
 
----
-## การพยากรณ์ราคา BTC ด้วยโมเดลต่าง ๆ
-![Overview](https://drive.google.com/uc?id=1f9ldfmz2gUWrgVchHNrQ8q9-hw-44iEN)
-
-### <ins>  Selecting the Model </ins>
-เพื่อให้การพยากรณ์ราคา Bitcoin (BTC) มีความแม่นยำสูงสุด ทางกลุ่มจึงทดลอง  (Pilot) พยากรณ์ราคา Bitcoin โดยใช้โมเดลพยากรณ์ (Predictive Model) จำนวน 5 โมเดล ได้แก่ (1) Linear Regression (2) Prophet (3) XGboost (4) Random Forest และ (5) Long Short-Term Memory (LSTM) จากข้อมูล Bitcoin ในวันที่ 20 ธันวาคม 2567 ช่วงเวลา 14.00 - 17.00 น. เพื่อพิจารณาเลือกโมเดลพยากรณ์ที่เหมาะสมสำหรับการพยากรณ์ราคา Bitcoin 
-
-### <ins> ผลลัพธ์จากการรันโมเดล </ins>
-
-1. **Linear Regression**  
-   ![Linear Regression Result](https://drive.google.com/uc?id=1WaCaEiWSx5lahe--ZyHhfEW_5bw8VsHe)
-
-2. **Prophet Model**  
-   ![Decision Tree Result](https://drive.google.com/uc?id=1kLjx5wbf_SUw4tbYBS8OBgWtTh4c3QCY)
-
-3. **XGBoost**  
-   ![XGBoost Result](https://drive.google.com/uc?id=19qIAhTvp-4uQpVqjRoJsURy0oZP5EtQ7)
-
-4. **Random Forest**  
-   ![Random Forest Result](https://drive.google.com/uc?id=1AeYVEQ01OekuTwwJMK6gCRJz5mgrxuI6)
-
-5. **LSTM**  
-   ![LSTM Result](https://drive.google.com/uc?id=1ZlicYoEMlmfCIOELqmDPbtKtgU3L2NB2)
-
-
-## 📈 Models Selection
-ทดลองรัน ML Model จำนวน 5 models ในวันที่ 20 ธันวาคม 2567 เพื่อพิจารณาเลือก Model ที่เหมาะสมสำหรับการทำนายราคา BTC
-
-### ผลลัพธ์ค่า MAPE ของทั้ง 5 models:
-| ลำดับ | ML Model             | เฉลี่ยค่า MAPE       |
-|-------|----------------------|--------------------|
-| 1     | Linear Regression    | 0.344504473       |
-| 2     | Prophet ✅            | 0.290467437       |
-| 3     | XGBoost              | 0.310918966       |
-| 4     | RandomForest         | 0.425594191       |
-| 5     | LSTM                 | 477,512,879.55    |
-
-จากการทดลองใช้ทั้ง 5 โมเดลพยากรณ์ราคา Bitcoin ในช่วงวันและเวลาดังกล่าว พบว่าผลลัพธ์ค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์ (Mean Absolute Percentage Error - MAPE) ของโมเดล Prophet นั้นมีค่าน้อยที่สุด กล่าวคือ โมเดล Prophet มีประสิทธิภาพสูงสุดในการพยากรณ์ราคา Bitcoin ในช่วงวันและเวลาดังกล่าว รองลงมาได้แก่ XGboost Linear Regression Random Forest และ LSTM ตามลำดับ
+<p align="center">
+  <i>DADS6005 Final Project · NIDA · Oct – Dec 2024</i>
+</p>
 
 ---
 
-## 🌟 Predicting Live Bitcoin Price using Prophet Model 
+## Overview
 
-Prophet เป็นโมเดลที่พัฒนาโดยทีมงาน Facebook (Meta) ซึ่งออกแบบมาเพื่อพยากรณ์ข้อมูลอนุกรมเวลา (Time Series Data) ได้อย่างแม่นยำและใช้งานง่าย สามารถจับแนวโน้ม (Trend) และโครงสร้างตามฤดูกาล (Seasonality) ที่ส่งผลต่อข้อมูลโดยที่ไม่จำเป็นต้องเชี่ยวชาญด้านการเรียนรู้ของเครื่อง (Machine Learning) ด้วยเหตุผลนี้ทำให้ Prophet เป็นโมเดลหนึ่งที่มีประสิทธิภาพในการพยากรณ์ข้อมูลอนุกรมเวลาเหมือนกับเทคนิคอื่น ๆ
+This project builds an automated pipeline for **Bitcoin price forecasting every 5 minutes** using live market data. The workflow begins with a model selection stage, where five forecasting approaches were tested:
 
-โมเดล Prophet จึงเป็นโมลเดลหนึ่งที่เหมาะสมในการวิเคราะห์ข้อมูลราคาของ BTC ซึ่งมีลักษณะเป็นข้อมูลแบบอนุกรมเวลา เนื่องจาก Prophet ถูกออกแบบมาเพื่อวิเคราะห์ข้อมูลประเภทนี้โดยเฉพาะ ไม่ว่าจะเป็นข้อมูลที่มีแนวโน้มเพิ่มขึ้น ลดลง หรือมีความผันผวนสูง ซึ่งสกุลเงินดิจิทัล หรือ Cryptocurrency เป็นสกุลเงินที่มีแนวโน้มเกิดความผันผวนสูง และ Prophet สามารถรับมือกับข้อมูลสูญหาย (Missing Data) ได้ดี เนื่องจากเป็นโมเดลที่ปรับแต่งพารามิเตอร์โดยอัตโนมัติ ทำให้ลดความซับซ้อนในการเตรียมข้อมูลก่อนใช้งาน รวมทั้ง Prophet มีความสามารถพิเศษในการตรวจจับโครงสร้างตามฤดูกาลของข้อมูลได้ เช่น แนวโน้มราคาที่เปลี่ยนแปลงตามช่วงเวลา รวมถึงผลกระทบจากวันสำคัญที่อาจส่งผลต่อราคา เช่น ราคา bitcoin มีแนวโน้มลดลงในช่วงเทศกาลคริสต์มาส เป็นต้น
+- Linear Regression
+- Prophet
+- XGBoost
+- Random Forest
+- LSTM
 
+Among these, **Prophet** produced the lowest average **MAPE (0.290467437)** and was selected as the final model for the live forecasting pipeline.
+
+The production workflow was then automated with **Apache Airflow on Amazon EC2**, using market data from **Binance** and periodic error tracking to monitor forecasting quality over time.
+
+---
+
+## Project Goal
+
+The main goal was to build a system that does more than train a forecasting model once. Instead, the project was designed to:
+
+- generate BTC forecasts every **5 minutes**
+- compare forecasts against actual market prices
+- calculate rolling **hourly MAPE**
+- track how forecasting performance changes during periods of different market behavior
 
 ---
 
-## 🔮 การทำงานของ Prophet Model
+## Model Selection
 
-การทำงานของโมเดล Prophet เริ่มจากการดึงข้อมูลราคาของ BTC จากฐานข้อมูล MongoDB ในรูปแบบ JSON โดยข้อมูลนี้จะถูกแปลงให้อยู่ในรูปแบบตาราง (Data Frame) ที่ประกอบด้วยสองคอลัมน์ ได้แก่ ds เป็นเวลาที่แปลงจาก timestamp ให้เป็น datetime (X = closeTime) และ y เป็นราคาที่ต้องการพยากรณ์ (Y = lastPrice) จากนั้น Prophet จะปรับพารามิเตอร์ เช่น การตรวจจับแนวโน้ม (Trend) ข้อมูลในช่วงฤดูกาล (Seasonality) และ ช่วงความเชื่อมั่น (Confidence Interval) โดยใช้คำสั่ง “model.fit(df)” เมื่อเทรนโมเดลเสร็จแล้ว โมเดลจะถูกบันทึกลงในไฟล์ model_prophet.pkl ด้วย pickle เพื่อนำไปใช้ในการพยากรณ์  โดยเมื่อรัน DAGs ที่มีไว้สำหรับพยากรณ์ (dag3-Prophet) โดยเรียกโมเดลที่บันทึกไว้มาใช้สร้างข้อมูลตารางของช่วงเวลาที่ต้องการพยากรณ์ และคำนวณค่าพยากรณ์ด้วยคำสั่ง “predict” ซึ่งผลลัพธ์จะถูกบันทึกลงไฟล์ CSV เพื่อใช้สำหรับการวิเคราะห์ต่อไป จากนั้นโมเดลจะเปรียบเทียบค่าพยากรณ์กับข้อมูลราคา BTC จริงจาก Binance API โดยคำนวณค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์ (MAPE) และบันทึกค่าเฉลี่ยดังกล่าวในรอบ 1 ชั่วโมง (จากทั้งหมด 12 รอบ ๆ ละ 5 นาที) ลงในไฟล์ mape.txt โดยดำเนินกระบวนการทั้งหมดนี้ผ่าน Apache Airflow ซึ่งเป็นแพลตฟอร์มการจัดการการทำงานแบบกระจายศูนย์ (Open-Source Workflow Management Platform) ที่ช่วยจัดลำดับการทำงานแต่ละขั้นตอนอย่างชัดเจนตั้งแต่ การดึงข้อมูล การเทรนโมเดล และการพยากรณ์ ในเวลาและเงื่อนไขที่กำหนดไว้ล่วงหน้าแบบอัตโนมัติ
+Before deploying the live pipeline, five models were tested on Bitcoin price data from **20 December 2024 (14:00–17:00)**.
 
----
-## รันโค้ดทั้งหมดด้วย Apache Airflow บน Amazon EC2 โดยใช้ Prophet Model ในการทำนายราคา Bitcoin (BTC)
-![EC2](https://drive.google.com/uc?id=1dMTXIcNaa914zBxZm_qTu7C-je5MIzmd)
+### Average MAPE by Model
 
+| Model | Average MAPE |
+|------|--------------:|
+| Prophet | **0.290467437** |
+| XGBoost | 0.310918966 |
+| Linear Regression | 0.344504473 |
+| Random Forest | 0.425594191 |
+| LSTM | 477,512,879.55 |
 
-## 📊 ผลลัพธ์ค่า MAPE จาก Prophet Model
-
-**ช่วงเวลา: 22.00น. ของวันที่ 21 ธันวาคม 2567 - 6.00น. ของวันที่ 22 ธันวาคม 2567**  
-   ![21/12/67](https://drive.google.com/uc?id=1y-LmiSZlzC6S0aPdDUq3r_kTQRXAV0jh)
-
-**ช่วงเวลา: 22.00น. ของวันที่ 22 ธันวาคม 2567 - 6.00น. ของวันที่ 23 ธันวาคม 2567**  
-   ![22/12/67](https://drive.google.com/uc?id=1up1v7taT9rSKYBhyaI9GpyfLnOsaMrp8)
-
-**ช่วงเวลา: 22.00น. ของวันที่ 23 ธันวาคม 2567 - 6.00น. ของวันที่ 24 ธันวาคม 2567**  
-   ![23/12/67](https://drive.google.com/uc?id=19RU94p3jKaBHfF9Agtq_dBbwxN9sNF-s)
-
-### ผลการวิเคราะห์ที่สำคัญ
-
-1. **ความสัมพันธ์ระหว่างความผันผวนและความผิดพลาดของการพยากรณ์**:
-   - **ช่วงราคาผันผวนสูง**: พบว่าค่าเฉลี่ยร้อยละความผิดพลาดสัมบูรณ์ (MAPE) สูงในช่วงที่ราคามีการเปลี่ยนแปลงอย่างฉับพลัน
-   - **ช่วงราคามีเสถียรภาพ**: ค่า MAPE ลดลงในช่วงที่ราคามีการเปลี่ยนแปลงต่อเนื่อง สะท้อนถึงความแม่นยำของโมเดลที่เพิ่มขึ้น
-
-2. **ผลกระทบจากการเปลี่ยนแปลงราคาที่ฉับพลัน**:
-   - การเปลี่ยนแปลงราคาที่เพิ่มขึ้นหรือลดลงอย่างรวดเร็วทำให้ค่า MAPE สูงขึ้น ซึ่งแสดงถึงข้อจำกัดของโมเดลในการจับความเปลี่ยนแปลงแบบฉับพลัน
-
-3. **ปัจจัยภายนอกที่ส่งผลต่อความผันผวน**:
-   - ความผันผวนของราคามีสาเหตุมาจากปัจจัยภายนอก เช่น:
-     - นโยบายเศรษฐกิจของสหรัฐฯ ภายใต้การบริหารของ **ประธานาธิบดีโดนัลด์ ทรัมป์**
-     - การลดอัตราดอกเบี้ยของ **ธนาคารกลางสหรัฐฯ (Fed)**
-     - ความมั่นคงทางเศรษฐกิจและการเมืองในสหรัฐฯ
-    
-<ins> กล่าวโดยสรุป</ins> คือ Prophet เป็นโมเดลที่ใช้พยากรณ์ราคา Bitcoin ที่ผันผวนและซับซ้อนในตลาดดิจิทัลได้อย่างมีประสิทธิภาพ และ **ค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์ (MAPE)** สามารถใช้เป็นดัชนีวัดความแม่นยำของโมเดลในการพยากรณ์ราคา Bitcoin ได้ โดยมีความสัมพันธ์กับลักษณะของข้อมูลราคา Bitcoin โดยโมเดลสามารถพยากรณ์ได้แม่นยำขึ้นเมื่อราคา Bitcoin มีความเสถียร ทำให้ค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์ลดลง ในทางกลับกัน ความแม่นยำในการพยากรณ์ของโมเดลจะลดลงเมื่อราคา Bitcoin เปลี่ยนแปลงฉับพลันโดยที่ค่าเฉลี่ยของร้อยละความผิดพลาดสัมบูรณ์จะสูงขึ้น ซึ่งอาจแก้ไขโดยใช้เทคนิคการวิเคราะห์ข้อมูลอื่น ๆ ร่วมกับ Prophet เพื่อเพิ่มความแม่นยำในการพยากรณ์ 
-
-## ข้อมูลราคา Bitcoin ช่วงเวลา 22:00 น. - 06:00 น. ระหว่างวันที่ 21 - 24 ธันวาคม พ.ศ. 2567
-![Overview](https://drive.google.com/uc?id=1oWz3KGCbxEzxho9VB_2PncsK-0C7sxay)
-
-ทั้งนี้ การวิเคราะห์ข้อมูลที่มีความแม่นยำสูงขึ้นจะเป็นประโยชน์กับประชาชนและหน่วยงานที่เกี่ยวข้องกับการลงทุนในสกุลเงินดิจิทัล ช่วยวางแผนการซื้อขายสกุลเงินดิจิทัล โดยเฉพาะช่วงที่ตลาดมีแนวโน้มเสถียร เป็นการสร้างกลยุทธ์การลงทุนที่ตอบสนองต่อการเปลี่ยนแปลงของราคาได้รวดเร็วและมีประสิทธิภาพมากยิ่ง อีกทั้งยังสร้างความตระหนักรู้ต่อความเสี่ยงในการลงทุนเพื่อให้ได้ผลตอบแทนสูงสุด
+Based on this comparison, **Prophet** was selected as the forecasting model for the live system.
 
 ---
-**🔗 ดูโค้ดของทุกโมเดลและผลลัพธ์เพิ่มเติมได้ที่:** [Google Drive](https://drive.google.com/drive/folders/1lQ6NR8OigIGuQdr0qaoaRkhmaGkv70ux?usp=sharing )
+
+## Why Prophet
+
+Prophet was chosen because it handled this short BTC forecasting setup better than the other tested models. It was also a practical fit for the project because it:
+
+- works naturally with time-series data
+- handles trend and seasonality well
+- is relatively robust to missing data
+- is easy to train and reuse in an automated workflow
+
+For a short-interval forecasting task with highly volatile crypto prices, that combination made it the most usable choice in this experiment.
+
 ---
+
+## Pipeline
+
+```text
+Binance / MongoDB JSON
+        ↓
+Data transformation to Prophet format (ds, y)
+        ↓
+Model training / loading
+        ↓
+5-minute BTC forecast generation
+        ↓
+Comparison with actual BTC prices
+        ↓
+Hourly MAPE tracking
+        ↓
+Apache Airflow orchestration on Amazon EC2
+```
+
+---
+
+## How the System Works
+
+The forecasting pipeline follows these steps:
+
+1. **Data ingestion**
+   - BTC price data is pulled from a MongoDB JSON source tied to Binance market data
+
+2. **Transformation**
+   - The raw data is converted into Prophet’s expected format:
+     - `ds` = timestamp converted to datetime
+     - `y` = BTC price (`lastPrice`)
+
+3. **Model training**
+   - Prophet is fitted using the transformed dataframe
+   - The trained model is saved as `model_prophet.pkl`
+
+4. **Forecast generation**
+   - Airflow runs the forecasting workflow every **5 minutes**
+   - The saved Prophet model is loaded and used to generate the next prediction
+
+5. **Evaluation**
+   - Forecasted values are compared with actual BTC prices
+   - **MAPE** is calculated continuously
+   - Every 12 runs (1 hour), the average MAPE is logged for monitoring
+
+---
+
+## Deployment
+
+The full workflow was automated with **Apache Airflow** and deployed on **Amazon EC2**.
+
+This setup handled:
+- task scheduling
+- model execution
+- forecast generation
+- result logging
+- repeatable hourly evaluation
+
+The goal was to make the process run continuously with minimal manual intervention.
+
+---
+
+## Key Features
+
+- End-to-end **5-minute Bitcoin forecasting pipeline**
+- Benchmarking across **5 forecasting models**
+- Final deployment using **Prophet**
+- Automated orchestration with **Apache Airflow**
+- Cloud execution on **Amazon EC2**
+- Hourly **MAPE tracking** for live accuracy monitoring
+
+---
+
+## What the Results Showed
+
+A few patterns stood out during the live runs:
+
+- **Prophet performed best overall** among the five tested models in the initial benchmark
+- Forecast accuracy was generally better during more stable periods
+- MAPE increased when the market moved sharply in a short time
+- The pipeline was useful not just for generating forecasts, but for tracking how model quality changed under different market conditions
+
+---
+
+## Setup
+
+### Prerequisites
+
+- Python
+- Apache Airflow
+- Amazon EC2 (or a similar Linux-based cloud VM)
+- Access to market data / stored BTC data
+- Required Python libraries for forecasting and scheduling
+
+### Example project flow
+
+```bash
+git clone https://github.com/KunakornMart/bitcoin-price-forecasting-pipeline.git
+cd bitcoin-price-forecasting-pipeline
+```
+
+Train or load the Prophet model, then run the Airflow DAGs for scheduled forecasting and evaluation.
+
+---
+
+## Repository Structure
+
+```text
+bitcoin-price-forecasting-pipeline/
+├── dags/
+├── models/
+│   └── model_prophet.pkl
+├── data/
+├── notebooks/
+├── scripts/
+├── README.md
+└── requirements.txt
+```
+
+> Update the structure above to match your actual repository layout if needed.
+
+---
+
+## Dashboard / Output Artifacts
+
+This project focuses more on the forecasting pipeline and logged outputs than on a full visualization dashboard. The main outputs include:
+
+- generated BTC price forecasts
+- hourly MAPE summaries
+- model comparison results
+- saved Prophet model artifact
+
+If needed, this pipeline could be extended later with a dashboard layer such as Streamlit, Grafana, or Superset.
+
+---
+
+## What I’d Improve Next
+
+- **Longer validation window** — the experiment covered only a short time span
+- **More market features** — order book signals, volatility features, or external macro data could improve forecasting quality
+- **Hybrid forecasting models** — combining Prophet with other models may help during sudden price swings
+- **Visualization layer** — adding a dashboard would make it easier to monitor forecasts and error trends in real time
+- **More robust evaluation** — expanding beyond MAPE and adding additional error metrics would provide a fuller picture
+
+---
+
+## Skills Demonstrated
+
+- Time series forecasting
+- Model selection and evaluation
+- MAPE-based performance tracking
+- Workflow orchestration with Apache Airflow
+- Cloud deployment with Amazon EC2
+- Data transformation for forecasting pipelines
+- Near-real-time model monitoring
+
+---
+
+## Suggested Repository Name
+
+**bitcoin-price-forecasting-pipeline**
+
+Other good options:
+- `real-time-bitcoin-forecasting`
+- `bitcoin-forecasting-with-prophet`
+- `airflow-bitcoin-price-prediction`
+
+---
+
+## Author
+
+**Kunakorn Pruksakorn**  
+M.Sc. in Data Analytics and Data Science, NIDA
+
+---
+
+<p align="center">
+  Built as part of the DADS6005 Final Project at NIDA.
+</p>
